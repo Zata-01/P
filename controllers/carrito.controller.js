@@ -1,27 +1,34 @@
-export const getCart = (req, res) =>{
-    if(!req.session.carrito) req.session.carrito = [];
-    res.json(req.session.carrito);
+// Obtener carrito
+export const getCart = (req, res) => {
+  if (!req.session.carrito) req.session.carrito = [];
+  return res.json(req.session.carrito);
 };
 
-export const addToCart = (req,res) =>{
-    const item = req.body
+// Agregar al carrito
+export const addToCart = (req, res) => {
+  const item = req.body;
 
-    if(!req.session.carrito){
-        req.session.carrito = [];
-    }
+  if (!item.id || !item.nombre || !item.precio) {
+    return res.status(400).json({
+      message: "El producto debe incluir id, nombre y precio."
+    });
+  }
 
-    const index = req.session.carrito.findIndex(p => p.id === item.id); //Busca si el producto ya esta en el carrito
+  if (!req.session.carrito) req.session.carrito = [];
 
-    if(index !== -1){//Si existe el producto, aumenta la cant
-        req.session.carrito[index].cantidad++;
+  const index = req.session.carrito.findIndex(p => p.id === item.id);
 
-    }else{
-        req.session.carrito.push({...item, cantidad: 1});
-    }
-    res.json(req.session.carrito)
+  if (index !== -1) {
+    req.session.carrito[index].cantidad++;
+  } else {
+    req.session.carrito.push({ ...item, cantidad: 1 });
+  }
+
+  return res.json(req.session.carrito);
 };
 
+// Vaciar carrito
 export const clearCart = (req, res) => {
-    req.session.carrito = [];
-    res.json({ message: "Carrito Vaciado"})
-}
+  req.session.carrito = [];
+  return res.json({ message: "Carrito vaciado" });
+};
