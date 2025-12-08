@@ -1,12 +1,15 @@
-import {Router} from "express";
-import {addToCart, getCart, clearCart} from "../controllers/carrito.controller.js"
+import { Router } from "express";
+import { addToCart, getCart, clearCart } from "../controllers/carrito.controller.js";
 
-const router = Router()
+const router = Router();
 
-router.get('/', getCart); //Obtener Carrito
+// Obtener carrito
+router.get("/", getCart);
 
-router.post('/add', addToCart); //Agregar Productos
+// Agregar producto al carrito
+router.post("/add", addToCart);
 
-router.post('/clear', clearCart); //Obtener Carrito
+// Vaciar carrito
+router.delete("/clear", clearCart);
 
 export default router;
