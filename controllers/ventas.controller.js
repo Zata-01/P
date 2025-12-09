@@ -106,15 +106,44 @@ export const createVenta = async (req, res) => {
 
         await client.query("COMMIT");
 
-        // Esta es la respuesta de la venta, se utilizará para la lo del ticket(FIDEL), devuelve todos los detalles de la venta
+        
+
+        // Folio tipo V000123 a partir del id de la venta
+        const folio = "V" + String(venta_id).padStart(6, "0");
+
+        // Lineas del ticket a partir del carrito que llegó
+        const lineas = productos.map((p) => {
+            const descripcion =
+                p.nombre ||
+                p.nombre_producto ||
+                p.descripcion ||
+                `Producto #${p.id}`;
+
+            const cantidad   = Number(p.cantidad);
+            const precioUnit = Number(p.precio);
+            const importe    = +(cantidad * precioUnit).toFixed(2);
+
+            return {
+                id: p.id,
+                cantidad,
+                descripcion,
+                precio_unit: precioUnit,
+                importe,
+            };
+        });
+
+        // Esta es la respuesta de la venta, pensada directamente para el ticket
         return res.json({
-            venta_id,
-            fecha: new Date(),
-            usuario_id,
-            productos,
-            subtotal,
-            iva,
-            total
+            venta: {
+                id: venta_id,
+                folio,              // "V000123"
+                fecha: new Date(),  // si luego quieres la fecha de la BD, se puede cambiar
+                usuario_id,
+                subtotal,
+                iva,
+                total,
+            },
+            lineas,
         });
 
     } catch (error) {
