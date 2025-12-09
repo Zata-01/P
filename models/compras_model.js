@@ -1,25 +1,29 @@
-import db from "../database/db.js";
+import { pool } from "../db.js";
 
+// Reporte de compras por fecha
 export const reporteComprasPorFecha = async (inicio, fin) => {
-    const [rows] = await db.execute(
+    const result = await pool.query(
         `SELECT c.id AS folio, c.fecha, c.proveedor,
                 c.iva, c.total, u.usuario
          FROM compras c
          JOIN usuarios u ON u.id = c.usuario_id
-         WHERE c.fecha BETWEEN ? AND ?
+         WHERE c.fecha BETWEEN $1 AND $2
          ORDER BY c.fecha DESC`,
-        [inicio + " 00:00:00", fin + " 23:59:59"]
+        [inicio, fin]
     );
-    return rows;
+
+    return result.rows;
 };
 
+// Detalles de una compra
 export const detallesCompra = async (compraId) => {
-    const [rows] = await db.execute(
+    const result = await pool.query(
         `SELECT cd.cantidad, cd.costo, i.nombre
          FROM compras_det cd
          JOIN items i ON i.id = cd.item_id
-         WHERE cd.compra_id = ?`,
+         WHERE cd.compra_id = $1`,
         [compraId]
     );
-    return rows;
+
+    return result.rows;
 };
