@@ -4,12 +4,12 @@ import { addToCart, getCart, clearCart } from "../controllers/carrito.controller
 const router = Router();
 
 // Obtener carrito
-router.get("/", getCart);
+router.get("/carrito", getCart);
 
 // Agregar producto al carrito
-router.post("/add", addToCart);
+router.post("/carrito", addToCart);
 
 // Vaciar carrito
-router.delete("/clear", clearCart);
+router.delete("/carrito", clearCart);
 
 export default router;

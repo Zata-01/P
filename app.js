@@ -3,6 +3,14 @@ import dotenv from "dotenv";
 import session from "express-session";
 import productosRoutes from "./routes/productos.routes.js";
 import carritoRoutes from "./routes/carrito.routes.js";
+import comprasRoutes from "./routes/compras.routes.js";
+import ventasRoutes from "./routes/ventas.routes.js";
+import devolucionesRoutes from "./routes/devoluciones.routes.js";
+import reportesRoutes from "./routes/reportes.routes.js";
+
+
+
+
 
 dotenv.config();
 
@@ -21,8 +29,13 @@ app.get("/", (req, res) => {
   res.json({ message: "Backend funcionando" });
 });
 
-app.use("/api", productosRoutes);
-app.use("/api/carrito", carritoRoutes);
+app.use('/api', comprasRoutes);
+app.use('/api', productosRoutes);
+app.use('/api', ventasRoutes);
+app.use('/api', devolucionesRoutes);
+app.use('/api', carritoRoutes);
+app.use('/api', reportesRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 
