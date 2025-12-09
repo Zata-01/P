@@ -9,7 +9,16 @@ app.get('/', (req, res) => {
   res.send('Hello friend')
 })
 
-app.post('/login', (req, res) => {})
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body
+  try {
+    const user = await UserRepository.login({ username, password })
+    res.send({ user })
+  } catch (error) {
+    res.status(401).send(error.message)
+  }
+})
+
 app.post('/register', async (req, res) => {
   const { username, password } = req.body
   console.log({ username, password })
