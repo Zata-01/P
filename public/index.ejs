@@ -7,69 +7,59 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <% if (typeof username !== 'undefined' ) { %>
-        <div class="form-container">
-            <h1>Hola <%= username %>!</h1>
-            <p>Te encuentras en el panel de administración</p>
-            <button id="close-session">Cerrar sesión</button>
-        </div>
-    <% } %>
-
-    <% if (typeof username === 'undefined' ) { %> 
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <h1>SEIKO EXPRESS</h1>
-                    <p>Ingresa tus credenciales para continuar</p>
-                </div>
-                
-                <form id="login-form" class="login-form">
-                    <div class="form-group">
-                        <label for="username">Usuario</label>
-                        <input type="text" id="login-username" name="username" required autocomplete="username">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Contraseña</label>
-                        <input type="password" id="login-password" name="password" required autocomplete="current-password">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-                    <span>&nbsp;</span>
-                </form>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>SEIKO EXPRESS</h1>
+                <p>Ingresa tus credenciales para continuar</p>
             </div>
-            <div class="login-card">
-                <div class="login-header">
-                    <h1>SEIKO EXPRESS</h1>
-                    <p>Ingresa tus credenciales para continuar</p>
-                </div>
-                
-                <form id="register-form" class="login-form">
-                    <div class="form-group">
-                        <label for="username">Usuario</label>
-                        <input type="text" id="register-username" name="username" required autocomplete="username">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Contraseña</label>
-                        <input type="password" id="register-password" name="password" required autocomplete="current-password">
-                    </div>
-                    
+            
+            <form id="login-form" class="login-form">
                 <div class="form-group">
-                        <label for="role">Rol</label>
-                        <select id="role" name="role" required>
-                            <option value="">Selecciona un rol</option>
-                            <option value="admin">Administrador</option>
-                            <option value="usuario">Usuario</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Registrar</button>
-                    <span>&nbsp;</span>
-                </form>
-            </div>
+                    <label for="username">Usuario</label>
+                    <input type="text" id="login-username" name="username" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="login-password" name="password" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                <span>&nbsp;</span>
+            </form>
         </div>
-    <% } %>   
+        <div class="login-card">
+            <div class="login-header">
+                <h1>SEIKO EXPRESS</h1>
+                <p>Ingresa tus credenciales para continuar</p>
+            </div>
+            
+            <form id="register-form" class="login-form">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="register-username" name="username" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="register-password" name="password" required autocomplete="current-password">
+                </div>
+                
+            <div class="form-group">
+                    <label for="role">Rol</label>
+                    <select id="role" name="role" required>
+                        <option value="">Selecciona un rol</option>
+                        <option value="admin">Administrador</option>
+                        <option value="usuario">Usuario</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Registrar</button>
+                <span>&nbsp;</span>
+            </form>
+        </div>
+    </div> 
     <script>
         const $ = el => document.querySelector(el)
 

@@ -1,113 +1,91 @@
-// Verificar autenticación
-const usuarioActual = window.verificarAutenticacion()
-document.getElementById("userInfo").textContent = `${usuarioActual.nombre} (${usuarioActual.rol})`
+let productos = []
+let paginaActual = 1
+const elementosPorPagina = 5 
+let totalProductos = 0
+const API_BASE = '/api/productos';
 
-// Ocultar elementos según el rol
-if (usuarioActual.rol !== "admin") {
-  document.querySelectorAll(".admin-only").forEach((el) => (el.style.display = "none"))
+async function fetchProductos(q = '', page = 1, limit = elementosPorPagina) {
+  try {
+    const queryParams = [];
+    
+    if (q) queryParams.push(`q=${encodeURIComponent(q)}`); 
+    
+    queryParams.push(`page=${page}`);
+    queryParams.push(`limit=${limit}`);
+    
+    const url = `${API_BASE}?${queryParams.join('&')}`;
+    const res = await fetch(url);
+    
+    if (!res.ok) {
+      const errorBody = await res.json();
+      throw new Error(errorBody.message || `Error al cargar productos: ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    
+    productos = data.items.map(item => ({
+      ...item,
+      codigoBarras: item.codigo_barras, 
+      descripcion: item.descripcion || 'N/A',
+      precio: parseFloat(item.precio),
+      stock: parseInt(item.existencia, 10),
+      imagen: item.imagen
+    }));
+    
+    totalProductos = data.totalItems || productos.length; 
+    paginaActual = data.page;
+    renderizarProductos();
+
+  } catch (error) {
+    console.error("Error en fetchProductos:", error);
+    document.getElementById("productsTableBody").innerHTML = '<tr><td colspan="8" style="text-align: center;">Error al cargar productos.</td></tr>';
+  }
 }
 
-// Datos de productos (mock - en producción viene de MySQL)
-let productos = [
-  {
-    id: 1,
-    codigoBarras: "7501234567890",
-    nombre: "Laptop HP Pavilion",
-    categoria: "Computadoras",
-    precio: 12500,
-    stock: 15,
-    stockMinimo: 5,
-  },
-  {
-    id: 2,
-    codigoBarras: "7501234567891",
-    nombre: "Mouse Logitech",
-    categoria: "Periféricos",
-    precio: 150,
-    stock: 5,
-    stockMinimo: 10,
-  },
-  {
-    id: 3,
-    codigoBarras: "7501234567892",
-    nombre: "Teclado Mecánico",
-    categoria: "Periféricos",
-    precio: 1400,
-    stock: 20,
-    stockMinimo: 8,
-  },
-  {
-    id: 4,
-    codigoBarras: "7501234567893",
-    nombre: 'Monitor Samsung 24"',
-    categoria: "Electrónica",
-    precio: 5600,
-    stock: 12,
-    stockMinimo: 6,
-  },
-  {
-    id: 5,
-    codigoBarras: "7501234567894",
-    nombre: "Webcam HD",
-    categoria: "Accesorios",
-    precio: 600,
-    stock: 25,
-    stockMinimo: 10,
-  },
-]
+const buscarProductoInput = document.getElementById("searchInput");
 
-let paginaActual = 1
-const elementosPorPagina = 10
-let productosFiltrados = [...productos]
+buscarProductoInput.addEventListener("input", (e) => {
+    const busqueda = (e.target.value || "").trim();
+    paginaActual = 1
+    fetchProductos(busqueda, 1);
+});
 
-// Buscar productos
-document.getElementById("searchInput").addEventListener("input", (e) => {
-  const busqueda = e.target.value.toLowerCase()
-  productosFiltrados = productos.filter(
-    (p) => p.nombre.toLowerCase().includes(busqueda) || p.codigoBarras.includes(busqueda),
-  )
-  paginaActual = 1
-  renderizarProductos()
-})
-
-// Renderizar productos
 function renderizarProductos() {
   const tbody = document.getElementById("productsTableBody")
   tbody.innerHTML = ""
 
-  const inicio = (paginaActual - 1) * elementosPorPagina
-  const fin = inicio + elementosPorPagina
-  const productosPaginados = productosFiltrados.slice(inicio, fin)
+  const productosPaginados = productos;
 
   if (productosPaginados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No se encontraron productos</td></tr>'
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No se encontraron productos</td></tr>'
+    renderizarPaginacion();
     return
   }
 
   productosPaginados.forEach((producto) => {
     const fila = document.createElement("tr")
 
-    const estadoStock =
-      producto.stock <= producto.stockMinimo
-        ? '<span class="badge badge-warning">Bajo</span>'
-        : '<span class="badge badge-success">Normal</span>'
-
     const acciones =
-      usuarioActual.rol === "admin"
-        ? `
+    `
             <button class="btn btn-small btn-secondary" onclick="editarProducto(${producto.id})">Editar</button>
             <button class="btn btn-small btn-danger" onclick="eliminarProducto(${producto.id})">Eliminar</button>
         `
-        : ""
+        
+    const imagenUrl = producto.imagen 
+        ? `data:image/jpeg;base64,${producto.imagen}` 
+        : 'https://via.placeholder.com/50x50?text=No+Img'; 
+    
+    const imagenHtml = `<img src="${imagenUrl}" alt="${producto.nombre}">`;
+
 
     fila.innerHTML = `
+            <td>${imagenHtml}</td> 
             <td>${producto.codigoBarras}</td>
             <td>${producto.nombre}</td>
-            <td>${producto.categoria}</td>
+            <td>${producto.descripcion || 'N/A'}</td> 
             <td>$${producto.precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
             <td>${producto.stock}</td>
-            <td>${estadoStock}</td>
-            ${usuarioActual.rol === "admin" ? `<td>${acciones}</td>` : ""}
+            <td>${acciones}</td>
         `
     tbody.appendChild(fila)
   })
@@ -120,15 +98,15 @@ function renderizarPaginacion() {
   const paginacion = document.getElementById("pagination")
   paginacion.innerHTML = ""
 
-  const totalPaginas = Math.ceil(productosFiltrados.length / elementosPorPagina)
+  const totalPaginas = Math.ceil(totalProductos / elementosPorPagina) || 1; 
 
   for (let i = 1; i <= totalPaginas; i++) {
     const boton = document.createElement("button")
     boton.textContent = i
     boton.className = i === paginaActual ? "active" : ""
     boton.onclick = () => {
-      paginaActual = i
-      renderizarProductos()
+      const q = buscarProductoInput.value.trim() || "";
+      fetchProductos(q, i);
     }
     paginacion.appendChild(boton)
   }
@@ -139,72 +117,125 @@ function abrirModalAgregarProducto() {
   document.getElementById("modalTitle").textContent = "Agregar Producto"
   document.getElementById("productForm").reset()
   document.getElementById("productId").value = ""
+  document.getElementById("stock").value = 0; 
+  document.getElementById("stock").disabled = true;
   document.getElementById("productModal").classList.add("active")
 }
 
 function cerrarModalProducto() {
   document.getElementById("productModal").classList.remove("active")
+  const q = buscarProductoInput.value.trim() || "";
+  fetchProductos(q, paginaActual);
 }
 
-function editarProducto(id) {
-  const producto = productos.find((p) => p.id === id)
-  if (!producto) return
+async function editarProducto(id) {
+  try {
+    const res = await fetch(`${API_BASE}/${id}`);
+    if (!res.ok) throw new Error(`Fallo al obtener producto: ${res.statusText}`);
+    
+    const producto = await res.json();
+    
+    document.getElementById("modalTitle").textContent = "Editar Producto"
+    document.getElementById("productId").value = producto.id
+    document.getElementById("codigoBarras").value = producto.codigo_barras
+    document.getElementById("nombre").value = producto.nombre
+    document.getElementById("descripcion").value = producto.descripcion; 
+    document.getElementById("precio").value = producto.precio
+    document.getElementById("stock").value = producto.existencia
+    document.getElementById("imagenBase64").value = ""; 
 
-  document.getElementById("modalTitle").textContent = "Editar Producto"
-  document.getElementById("productId").value = producto.id
-  document.getElementById("codigoBarras").value = producto.codigoBarras
-  document.getElementById("nombre").value = producto.nombre
-  document.getElementById("categoria").value = producto.categoria
-  document.getElementById("precio").value = producto.precio
-  document.getElementById("stock").value = producto.stock
-  document.getElementById("stockMinimo").value = producto.stockMinimo
-
-  document.getElementById("productModal").classList.add("active")
+    document.getElementById("productModal").classList.add("active")
+  } catch (error) {
+    console.error("Error al editar producto:", error);
+    alert(`Error al cargar producto para edición: ${error.message}`);
+  }
 }
 
-function eliminarProducto(id) {
-  if (confirm("¿Estás seguro de eliminar este producto?")) {
-    productos = productos.filter((p) => p.id !== id)
-    productosFiltrados = [...productos]
-    renderizarProductos()
-    alert("Producto eliminado correctamente")
+async function eliminarProducto(id) {
+  if (confirm("¿Estás seguro de marcar este producto como AGOTADO?")) {
+    try {
+      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+
+      if (!res.ok) {
+        const errorBody = await res.json();
+        throw new Error(errorBody.message || res.statusText);
+      }
+      
+      alert("Producto marcado como AGOTADO correctamente");
+      const q = buscarProductoInput.value.trim() || "";
+      fetchProductos(q, paginaActual);
+      
+    } catch (error) {
+      console.error("Error al eliminar producto:", error);
+      alert(`Error al eliminar producto: ${error.message}`);
+    }
   }
 }
 
 // Guardar producto
-document.getElementById("productForm").addEventListener("submit", (e) => {
+document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault()
 
   const id = document.getElementById("productId").value
-  const producto = {
-    id: id ? Number.parseInt(id) : Date.now(),
-    codigoBarras: document.getElementById("codigoBarras").value,
+  
+  const productoData = {
+    codigo_barras: document.getElementById("codigoBarras").value,
     nombre: document.getElementById("nombre").value,
-    categoria: document.getElementById("categoria").value,
-    precio: Number.parseFloat(document.getElementById("precio").value),
-    stock: Number.parseInt(document.getElementById("stock").value),
-    stockMinimo: Number.parseInt(document.getElementById("stockMinimo").value),
+    descripcion: document.getElementById("descripcion").value || null,
+    precio: document.getElementById("precio").value,
+    imagenBase64: document.getElementById("imagenBase64").value || null, 
+    estado: 'activo'
   }
 
-  if (id) {
-    // Editar
-    const indice = productos.findIndex((p) => p.id === Number.parseInt(id))
-    productos[indice] = producto
-  } else {
-    // Agregar
-    productos.push(producto)
+  let res;
+  try {
+    if (id) {
+      // Editar (PUT)
+      const url = `${API_BASE}/${id}`;
+      res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productoData)
+      });
+      if (!res.ok) throw new Error(`Fallo al actualizar producto: ${res.statusText}`);
+      alert("Producto actualizado correctamente");
+    } else {
+      // Agregar (POST)
+      res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productoData)
+      });
+      if (!res.ok) throw new Error(`Fallo al agregar producto: ${res.statusText}`);
+      alert("Producto agregado correctamente");
+    }
+
+  } catch (error) {
+      console.error("Error al guardar producto:", error);
+      let errorMessage = "Error al guardar producto.";
+      try {
+          if (res) {
+              const errorBody = await res.json();
+              errorMessage = errorBody.message || errorMessage;
+          } else {
+              errorMessage = error.message;
+          }
+      } catch (e) {
+          errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      return;
   }
 
-  productosFiltrados = [...productos]
-  renderizarProductos()
   cerrarModalProducto()
-  alert("Producto guardado correctamente")
 })
 
-// Exportar a CSV
+
+// Exportar a CSV 
 function exportarCSV() {
-  const encabezados = ["Código", "Nombre", "Categoría", "Precio", "Stock", "Stock Mínimo"]
-  const filas = productos.map((p) => [p.codigoBarras, p.nombre, p.categoria, p.precio, p.stock, p.stockMinimo])
+  const encabezados = ["Código de Barras", "Nombre", "Descripción", "Precio", "Stock"]
+  const filas = productos.map((p) => [p.codigoBarras, p.nombre, p.descripcion || '', p.precio, p.stock])
 
   let csv = encabezados.join(",") + "\n"
   filas.forEach((fila) => {
@@ -220,15 +251,14 @@ function exportarCSV() {
 }
 
 function cerrarSesion(event) {
-    event.preventDefault() // Previene que el <a> siga el href por defecto
+    event.preventDefault() 
     
     fetch('/logout', {
         method: 'POST'
     })
     .then(res => {
         if (res.ok) {
-            // Ahora la sesión ha sido limpiada en el servidor Y la cookie en el cliente.
-            window.location.href = '/' // Redirigir al inicio
+            window.location.href = '/'
         } else {
             alert('Fallo al cerrar sesión en el servidor.')
         }
@@ -243,4 +273,4 @@ window.exportarCSV = exportarCSV
 window.cerrarSesion = cerrarSesion
 
 // Inicializar
-renderizarProductos()
+fetchProductos();

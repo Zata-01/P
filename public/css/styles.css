@@ -518,3 +518,10 @@ tr:hover {
     border: 2px solid red !important; 
     cursor: pointer;
 }
+
+.table-container table img {
+  width: 50px; /* Ancho fijo */
+  height: 50px; /* Alto fijo */
+  object-fit: cover; /* Asegura que la imagen cubra el área sin distorsionar su aspecto */
+  border-radius: var(--radius);
+}

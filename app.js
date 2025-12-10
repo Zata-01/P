@@ -6,6 +6,7 @@ import comprasRoutes from "./routes/compras.routes.js";
 import ventasRoutes from "./routes/ventas.routes.js";
 import devolucionesRoutes from "./routes/devoluciones.routes.js";
 import reportesRoutes from "./routes/reportes.routes.js";
+import usuariosRoutes from "./routes/usuarios.routes.js";
 import { PORT, SECRET_JWT_KEY } from './config/config.js';
 import { UserRepository } from './user-repository.js';
 import cookieParser from 'cookie-parser';
@@ -61,6 +62,7 @@ app.use('/api', ventasRoutes);
 app.use('/api', devolucionesRoutes);
 app.use('/api', carritoRoutes);
 app.use('/api', reportesRoutes);
+app.use('/api', usuariosRoutes)
 
 app.set("views", path.join(__dirname, "public"));
 app.set("view engine", "ejs");
@@ -126,7 +128,7 @@ app.post('/login', async (req, res) => {
     notifier.notify({
       title: 'Error en login',
       message: error.message,
-      sound: true // Opcional
+      sound: true
     });
   }
 })
@@ -147,7 +149,7 @@ app.post('/register', async (req, res) => {
     notifier.notify({
       title: 'Error en registro',
       message: error.message,
-      sound: true // Opcional
+      sound: true
     });
   }
 })

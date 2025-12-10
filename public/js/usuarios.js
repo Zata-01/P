@@ -1,83 +1,55 @@
-// Datos simulados de usuarios
-let usuarios = [
-  {
-    id: 1,
-    nombre: "Administrador",
-    usuario: "admin",
-    contrasena: "admin123",
-    rol: "admin",
-    estado: "activo",
-    fechaCreacion: "2024-01-01",
-  },
-  {
-    id: 2,
-    nombre: "Operador Principal",
-    usuario: "operador",
-    contrasena: "op123",
-    rol: "operador",
-    estado: "activo",
-    fechaCreacion: "2024-01-05",
-  },
-  {
-    id: 3,
-    nombre: "Juan Pérez",
-    usuario: "juan.perez",
-    contrasena: "juan123",
-    rol: "operador",
-    estado: "inactivo",
-    fechaCreacion: "2024-01-10",
-  },
-]
-
+let usuarios = []
 let usuarioEnEdicion = null
 let paginaActual = 1
-const itemsPorPagina = 10
+const itemsPorPagina = 5
+const API_BASE = '/api/usuarios'
 
-// Declaración de la función verificarAutenticacion
-function verificarAutenticacion() {
-  // Implementación de la función verificarAutenticacion
-  console.log("Verificando autenticación...")
-}
-
-// Inicialización
 document.addEventListener("DOMContentLoaded", () => {
-  verificarAutenticacion()
   cargarUsuarios()
 })
 
-function cargarUsuarios() {
+async function fetchUsuarios() {
+    try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) {
+            const errorBody = await res.json();
+            throw new Error(errorBody.message || `Error al cargar usuarios: ${res.statusText}`);
+        }
+        return await res.json();
+    } catch (error) {
+        console.error("Error en fetchUsuarios:", error);
+        alert(`Error al cargar usuarios: ${error.message}`);
+        return [];
+    }
+}
+
+function cargarUsuariosPaginado(data) {
   const tbody = document.getElementById("usuariosTableBody")
   tbody.innerHTML = ""
 
-  if (usuarios.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay usuarios registrados</td></tr>'
-    return
+  const colspan = 4;
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center;">No se encontraron resultados</td></tr>`
+    generarPaginacion(0);
+    return;
   }
 
   const inicio = (paginaActual - 1) * itemsPorPagina
   const fin = inicio + itemsPorPagina
-  const usuariosPaginados = usuarios.slice(inicio, fin)
+  const usuariosPaginados = data.slice(inicio, fin)
 
   usuariosPaginados.forEach((usuario) => {
     const row = document.createElement("tr")
 
-    const rolBadge =
-      usuario.rol === "admin"
-        ? '<span class="badge badge-success">Administrador</span>'
-        : '<span class="badge badge-warning">Operador</span>'
-
-    const estadoBadge =
-      usuario.estado === "activo"
-        ? '<span class="badge badge-success">Activo</span>'
-        : '<span class="badge badge-danger">Inactivo</span>'
+    const rolDisplay = usuario.rol === "admin" ? "Administrador" : "Usuario"
+    const rolBadgeClass = usuario.rol === "admin" ? "badge-success" : "badge-warning"
+    const rolBadge = `<span class="badge ${rolBadgeClass}">${rolDisplay}</span>`
 
     row.innerHTML = `
-            <td>#${usuario.id.toString().padStart(3, "0")}</td>
-            <td>${usuario.nombre}</td>
+            <td>#${usuario.id.toString()}</td>
             <td>${usuario.usuario}</td>
             <td>${rolBadge}</td>
-            <td>${estadoBadge}</td>
-            <td>${new Date(usuario.fechaCreacion).toLocaleDateString("es-MX")}</td>
             <td>
                 <button class="btn btn-secondary btn-small" onclick="editarUsuario(${usuario.id})">Editar</button>
                 <button class="btn btn-danger btn-small" onclick="eliminarUsuario(${usuario.id})">Eliminar</button>
@@ -86,11 +58,16 @@ function cargarUsuarios() {
     tbody.appendChild(row)
   })
 
-  generarPaginacion()
+  generarPaginacion(data.length)
 }
 
-function generarPaginacion() {
-  const totalPaginas = Math.ceil(usuarios.length / itemsPorPagina)
+async function cargarUsuarios() {
+  usuarios = await fetchUsuarios()
+  cargarUsuariosPaginado(usuarios)
+}
+
+function generarPaginacion(totalItems) {
+  const totalPaginas = Math.ceil(totalItems / itemsPorPagina)
   const paginacion = document.getElementById("pagination")
   paginacion.innerHTML = ""
 
@@ -105,8 +82,17 @@ function generarPaginacion() {
 
 function cambiarPagina(pagina) {
   paginaActual = pagina
-  cargarUsuarios()
+  
+  const busqueda = document.getElementById("buscarUsuario")?.value.toLowerCase() || "";
+  const dataToRender = busqueda ? 
+    usuarios.filter(u => 
+      (u.usuario && u.usuario.toLowerCase().includes(busqueda)) ||
+      (u.rol && u.rol.toLowerCase().includes(busqueda))
+    ) : usuarios;
+    
+  cargarUsuariosPaginado(dataToRender) 
 }
+
 
 function abrirModalAgregarUsuario() {
   usuarioEnEdicion = null
@@ -128,156 +114,175 @@ function editarUsuario(id) {
   usuarioEnEdicion = usuario
   document.getElementById("tituloModalUsuario").textContent = "Editar Usuario"
   document.getElementById("usuarioId").value = usuario.id
-  document.getElementById("nombreCompleto").value = usuario.nombre
   document.getElementById("nombreUsuario").value = usuario.usuario
   document.getElementById("contrasena").value = ""
   document.getElementById("contrasena").required = false
-  document.getElementById("rolUsuario").value = usuario.rol
-  document.getElementById("estadoUsuario").value = usuario.estado
-
+  document.getElementById("rolUsuario").value = usuario.rol;
   document.getElementById("modalUsuario").classList.add("active")
 }
 
-function guardarUsuario(evento) {
+async function guardarUsuario(evento) {
   evento.preventDefault()
 
   const id = document.getElementById("usuarioId").value
-  const nombre = document.getElementById("nombreCompleto").value
   const usuario = document.getElementById("nombreUsuario").value
-  const contrasena = document.getElementById("contrasena").value
+  const password = document.getElementById("contrasena").value
   const rol = document.getElementById("rolUsuario").value
-  const estado = document.getElementById("estadoUsuario").value
 
-  if (id) {
-    // Editar usuario existente
-    const index = usuarios.findIndex((u) => u.id === Number.parseInt(id))
-    if (index !== -1) {
-      usuarios[index].nombre = nombre
-      usuarios[index].usuario = usuario
-      if (contrasena) {
-        usuarios[index].contrasena = contrasena
+  const userData = {
+    usuario,
+    password: password || undefined,
+    rol,
+  }
+  
+  let res;
+  try {
+    if (id) {
+      const url = `${API_BASE}/${id}`;
+      res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (!res.ok) throw new Error(`Fallo al actualizar usuario: ${res.statusText}`);
+      alert("Usuario actualizado exitosamente");
+    } else {
+      if (!password) {
+        alert("La contraseña es requerida para nuevos usuarios");
+        return;
       }
-      usuarios[index].rol = rol
-      usuarios[index].estado = estado
-    }
-    alert("Usuario actualizado exitosamente")
-  } else {
-    // Agregar nuevo usuario
-    if (!contrasena) {
-      alert("La contraseña es requerida para nuevos usuarios")
-      return
-    }
-
-    const nuevoUsuario = {
-      id: usuarios.length + 1,
-      nombre: nombre,
-      usuario: usuario,
-      contrasena: contrasena,
-      rol: rol,
-      estado: estado,
-      fechaCreacion: new Date().toISOString().split("T")[0],
+      
+      res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (!res.ok) throw new Error(`Fallo al crear usuario: ${res.statusText}`);
+      alert("Usuario creado exitosamente");
     }
 
-    usuarios.push(nuevoUsuario)
-    alert("Usuario creado exitosamente")
+  } catch (error) {
+      console.error("Error al guardar usuario:", error);
+      let errorMessage = "Error al guardar usuario.";
+      try {
+          if (res) {
+              const errorBody = await res.json();
+              errorMessage = errorBody.message || errorMessage;
+          } else {
+              errorMessage = error.message;
+          }
+      } catch (e) {
+          errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      return;
   }
 
-  // Aquí harías una llamada a tu API backend
-  // fetch('/api/usuarios', { method: 'POST', body: JSON.stringify(usuario) })
-
   cerrarModalUsuario()
-  cargarUsuarios()
+  await cargarUsuarios() 
 }
 
-function eliminarUsuario(id) {
+async function eliminarUsuario(id) {
   const usuario = usuarios.find((u) => u.id === id)
 
   if (!usuario) return
 
-  // No permitir eliminar el usuario actual
-  const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual"))
-  if (usuarioActual && usuarioActual.id === id) {
-    alert("No puedes eliminar tu propio usuario")
+  if (usuario.rol === "admin") {
+    alert("No puedes eliminar a un administrador")
     return
   }
+  
+  if (confirm(`¿Estás seguro de eliminar al usuario con ID #${id}?`)) {
+      try {
+          const url = `${API_BASE}/${id}`;
+          const res = await fetch(url, { method: 'DELETE' });
+          
+          if (!res.ok) {
+            const errorBody = await res.json();
+            throw new Error(errorBody.message || res.statusText);
+          }
 
-  if (confirm(`¿Estás seguro de eliminar al usuario "${usuario.nombre}"?`)) {
-    usuarios = usuarios.filter((u) => u.id !== id)
-
-    // Aquí harías una llamada a tu API backend
-    // fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
-
-    alert("Usuario eliminado exitosamente")
-    cargarUsuarios()
+          alert("Usuario eliminado exitosamente");
+          await cargarUsuarios() 
+      } catch (error) {
+          console.error("Error al eliminar usuario:", error);
+          alert(`Error al eliminar usuario: ${error.message}`);
+      }
   }
 }
+const buscarUsuarioInput = document.getElementById("buscarUsuario");
 
-// Búsqueda de usuarios
-document.getElementById("buscarUsuario").addEventListener("input", (e) => {
+buscarUsuarioInput.addEventListener("input", (e) => {
   const busqueda = e.target.value.toLowerCase()
 
   if (busqueda === "") {
-    cargarUsuarios()
+    cargarUsuariosPaginado(usuarios)
     return
   }
 
   const usuariosFiltrados = usuarios.filter(
     (usuario) =>
-      usuario.nombre.toLowerCase().includes(busqueda) ||
-      usuario.usuario.toLowerCase().includes(busqueda) ||
-      usuario.rol.toLowerCase().includes(busqueda),
+      (usuario.usuario && usuario.usuario.toLowerCase().includes(busqueda))
   )
 
-  const tbody = document.getElementById("usuariosTableBody")
-  tbody.innerHTML = ""
+  cargarUsuariosPaginado(usuariosFiltrados)
+});
 
-  if (usuariosFiltrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No se encontraron resultados</td></tr>'
+buscarUsuarioInput.addEventListener("blur", () => {
+    setTimeout(() => {
+        if (buscarUsuarioInput.value !== "") {
+            buscarUsuarioInput.value = "";
+            cargarUsuariosPaginado(usuarios);
+        }
+    }, 150);
+});
+
+const buscarUsuarioInputId = document.getElementById("buscarUsuarioId");
+
+buscarUsuarioInputId.addEventListener("input", (e) => {
+  const busqueda = e.target.value.toLowerCase()
+
+  if (busqueda === "") {
+    cargarUsuariosPaginado(usuarios)
     return
   }
 
-  usuariosFiltrados.forEach((usuario) => {
-    const row = document.createElement("tr")
+  const usuariosFiltrados = usuarios.filter(
+    (usuario) =>
+      (usuario.id && usuario.id.toString().includes(busqueda))
+  )
 
-    const rolBadge =
-      usuario.rol === "admin"
-        ? '<span class="badge badge-success">Administrador</span>'
-        : '<span class="badge badge-warning">Operador</span>'
+  cargarUsuariosPaginado(usuariosFiltrados)
+});
 
-    const estadoBadge =
-      usuario.estado === "activo"
-        ? '<span class="badge badge-success">Activo</span>'
-        : '<span class="badge badge-danger">Inactivo</span>'
-
-    row.innerHTML = `
-            <td>#${usuario.id.toString().padStart(3, "0")}</td>
-            <td>${usuario.nombre}</td>
-            <td>${usuario.usuario}</td>
-            <td>${rolBadge}</td>
-            <td>${estadoBadge}</td>
-            <td>${new Date(usuario.fechaCreacion).toLocaleDateString("es-MX")}</td>
-            <td>
-                <button class="btn btn-secondary btn-small" onclick="editarUsuario(${usuario.id})">Editar</button>
-                <button class="btn btn-danger btn-small" onclick="eliminarUsuario(${usuario.id})">Eliminar</button>
-            </td>
-        `
-    tbody.appendChild(row)
-  })
-})
+buscarUsuarioInputId.addEventListener("blur", () => {
+    setTimeout(() => {
+        if (buscarUsuarioInputId.value !== "") {
+            buscarUsuarioInputId.value = "";
+            cargarUsuariosPaginado(usuarios);
+        }
+    }, 150);
+});
 
 function cerrarSesion(event) {
-    event.preventDefault() // Previene que el <a> siga el href por defecto
+    event.preventDefault() 
     
     fetch('/logout', {
         method: 'POST'
     })
     .then(res => {
         if (res.ok) {
-            // Ahora la sesión ha sido limpiada en el servidor Y la cookie en el cliente.
-            window.location.href = '/' // Redirigir al inicio
+            window.location.href = '/'
         } else {
             alert('Fallo al cerrar sesión en el servidor.')
         }
     })
 }
 window.cerrarSesion = cerrarSesion
+window.abrirModalAgregarUsuario = abrirModalAgregarUsuario
+window.cerrarModalUsuario = cerrarModalUsuario
+window.editarUsuario = editarUsuario
+window.eliminarUsuario = eliminarUsuario
+window.guardarUsuario = guardarUsuario
+window.cambiarPagina = cambiarPagina
