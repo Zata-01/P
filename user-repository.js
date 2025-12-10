@@ -1,55 +1,56 @@
-import DBLocal from 'db-local'
-import crypto from 'node:crypto'
 import bcrypt from 'bcrypt'
 import { SALT_ROUNDS } from './config/config.js'
-
-const { Schema } = new DBLocal({ path: './db' })
-
-const Session = Schema('Session', {
-  _id: { type: String, required: true },
-  user: { type: String, required: true },
-  expires: { type: Date, required: true }
-})
-
-const User = Schema('User', {
-  _id: { type: String, required: true },
-  username: { type: String, required: true },
-  password: { type: String, required: true }
-})
+import { pool } from './config/db.js'
 
 export class UserRepository {
-  static async create ({ username, password }) {
+  static async create ({ username, password, rol }) { 
     Validation.username(username)
     Validation.password(password)
-    // Validar que el username no existe
-    const user = User.findOne({ username })
-    if (user) throw new Error('Username already exists.')
+    if (!rol) throw new Error('Role is required.')
 
-    const id = crypto.randomUUID()
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    const client = await pool.connect()
 
-    User.create({
-      _id: id,
-      username,
-      password: hashedPassword
-    }).save()
+    try {
+      const checkUser = await client.query('SELECT id FROM usuarios WHERE usuario = $1', [username])
+      if (checkUser.rows.length > 0) {
+        throw new Error('Username already exists.')
+      }
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
-    return id
+      const result = await client.query(
+        'INSERT INTO usuarios (usuario, password, rol) VALUES ($1, $2, $3) RETURNING id',
+        [username, hashedPassword, rol]
+      )
+
+      return result.rows[0].id
+    } finally {
+      client.release()
+    }
   }
 
   static async login ({ username, password }) {
     Validation.username(username)
     Validation.password(password)
 
-    const user = User.findOne({ username })
-    if (!user) throw new Error('Username does not exist.')
+    const client = await pool.connect()
 
-    const isValid = await bcrypt.compareSync(password, user.password)
-    if (!isValid) throw new Error('Password is invalid.')
+    try {
+      const result = await client.query(
+        'SELECT id, usuario, password, rol FROM usuarios WHERE usuario = $1',
+        [username]
+      )
 
-    const { password: _, ...publicUser } = user
+      const user = result.rows[0]
+      if (!user) throw new Error('Username does not exist.')
 
-    return publicUser
+      const isValid = await bcrypt.compare(password, user.password)
+      if (!isValid) throw new Error('Password is invalid.')
+
+      const { password: _, id, rol, ...publicUser } = user
+      return { _id: id, rol, ...publicUser } 
+    } finally {
+      client.release()
+    }
   }
 }
 

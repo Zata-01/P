@@ -505,3 +505,16 @@ tr:hover {
     max-width: 100%;
   }
 }
+
+#logout-link {
+    /* Mueve el enlace temporalmente a una capa superior */
+    position: relative;
+    z-index: 1000; 
+
+    /* Asegúrate de que los eventos de clic estén activos */
+    pointer-events: auto !important; 
+    
+    /* Agrega un borde temporal para ver el área que ocupa el enlace */
+    border: 2px solid red !important; 
+    cursor: pointer;
+}

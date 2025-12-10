@@ -23,7 +23,7 @@
                     <li class="nav-item"><a href="devoluciones" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Devoluciones</a></li>
                     <li class="nav-item admin-only"><a href="reportes" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Reportes</a></li>
                     <li class="nav-item admin-only"><a href="usuarios" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Usuarios</a></li>
-                    <li class="nav-item"><a href="/" class="nav-link" onclick="cerrarSesion()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Cerrar Sesión</a></li>
+                    <li class="nav-item"><a href="/" class="nav-link" onclick="cerrarSesion(event)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Cerrar Sesión</a></li>
                 </ul>
             </nav>
         </aside>
@@ -124,8 +124,6 @@
             <p style="margin: 0.5rem 0 0 0;">Sistema POS</p>
         </div>
     </div>
-    
-    <script src="auth.js"></script>
-    <script src="ventas.js"></script>
+    <script src="js/ventas.js"></script>
 </body>
 </html>

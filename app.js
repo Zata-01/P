@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import session from "express-session";
 import productosRoutes from "./routes/productos.routes.js";
 import carritoRoutes from "./routes/carrito.routes.js";
 import comprasRoutes from "./routes/compras.routes.js";
@@ -16,6 +15,27 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const requireSession = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(403).send('Acceso denegado, necesita sesion')
+  }
+  next()
+}
+
+const requireAdmin = (req, res, next) => {
+  if (!req.session.user || req.session.user.rol !== 'admin') {
+    return res.status(403).send('Prohibido, solo administradores')
+  }
+  next()
+}
+
+const preventCache = (req, res, next) => {
+    res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+    res.set('Expires', '0');
+    res.set('Pragma', 'no-cache');
+    next();
+};
 
 dotenv.config();
 
@@ -34,13 +54,6 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || "secret_dev",
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
 app.use('/api', comprasRoutes);
 app.use('/api', productosRoutes);
 app.use('/api', ventasRoutes);
@@ -56,38 +69,37 @@ app.get('/', (req, res) => {
   res.render('index.ejs', user)
 })
 
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', requireSession, preventCache, (req, res) => {
   const { user } = req.session
-  if (!user) return res.status(403).send('Access not authorized')
   res.render('dashboard.ejs', user)
 })
 
-app.get('/productos', (req, res) => {
+app.get('/productos', requireSession, preventCache,(req, res) => {
   const { user } = req.session
   res.render('productos.ejs', user)
 })
 
-app.get('/compras', (req, res) => {
+app.get('/compras', requireSession, preventCache,(req, res) => {
   const { user } = req.session
   res.render('compras.ejs', user)
 })
 
-app.get('/ventas', (req, res) => {
+app.get('/ventas', requireSession, preventCache,(req, res) => {
   const { user } = req.session
   res.render('ventas.ejs', user)
 })
 
-app.get('/devoluciones', (req, res) => {
+app.get('/devoluciones', requireSession, preventCache,(req, res) => {
   const { user } = req.session
   res.render('devoluciones.ejs', user)
 })
 
-app.get('/usuarios', (req, res) => {
+app.get('/usuarios', requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('usuarios.ejs', user)
 })
 
-app.get('/reportes', (req, res) => {
+app.get('/reportes', requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('reportes.ejs', user)
 })
@@ -97,7 +109,7 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body
   try {
     const user = await UserRepository.login({ username, password })
-    const token = jwt.sign({ id: user._id, username: user.username }, SECRET_JWT_KEY, {
+    const token = jwt.sign({ id: user._id, username: user.username, rol: user.rol }, SECRET_JWT_KEY, {
       expiresIn: '1h'
     })
     res.cookie('access_token', token, {
@@ -107,23 +119,33 @@ app.post('/login', async (req, res) => {
       maxAge: 1000 * 60 * 60 // 1 hora máximo de validez para la cookie
     }).send({ user })
   } catch (error) {
+    console.error('Error en login:', error)
     res.status(401).send(error.message)
   }
 })
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body
-  console.log({ username, password })
+  const { username, password, rol } = req.body 
+  
+  if (rol !== 'admin' && rol !== 'usuario') {
+      return res.status(400).send('Invalid role specified.')
+  }
 
   try {
-    const id = await UserRepository.create({ username, password })
+    const id = await UserRepository.create({ username, password, rol }) 
     res.send({ id })
   } catch (error) {
     res.status(400).send(error.message)
+    console.error('Error en registro:', error)
   }
 })
+
 app.post('/logout', (req, res) => {
-  res.clearCookie('access_token').json({ message: 'Logout successful' })
+    res.clearCookie('access_token', {
+        httpOnly: true, // Debe coincidir con la configuración
+        sameSite: 'strict', // Debe coincidir con la configuración
+        secure: process.env.NODE_ENV === 'production' // También debe coincidir
+    }).json({ message: 'Logout successful' })
 })
 
 app.listen(PORT, () => {

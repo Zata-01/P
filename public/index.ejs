@@ -60,7 +60,7 @@
                         <select id="role" name="role" required>
                             <option value="">Selecciona un rol</option>
                             <option value="admin">Administrador</option>
-                            <option value="operador">Operador</option>
+                            <option value="usuario">Usuario</option>
                         </select>
                     </div>
                     
@@ -112,46 +112,36 @@
             e.preventDefault()
             const username = $('#register-username').value
             const password = $('#register-password').value
-            const confirmPassword = $('#register-confirm-password').value
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match')
-                return
-            }
+            const rol = $('#role').value
 
             fetch('/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, rol })
             })
             .then(res=> {
                 if(res.ok) {
-                    registerSpan.innerText = 'Register successful. Redirecting...'
+                    registerSpan.innerText = 'Registro exitoso. Redirigiendo...'
                     registerSpan.style.color = 'green'
                     setTimeout(() => {
-                        window.location.href = '/dashboars'
+                        window.location.href = '/' 
                         loginSpan.innerText = null
                     }, 2000)
                 } else {
-                    registerSpan.innerText = 'There was an error trying to register.'
+                    registerSpan.innerText = 'Hubo un error al registrarse.'
                     registerSpan.style.color = 'red'
                 }
             })
         })
 
         logoutButton?.addEventListener('click', e => {
-            e.preventDefault()
             fetch('/logout', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application-json'
+                    'Content-Type': 'application/json' 
                 }
-            })
-            .then(res => {
-                console.log(res)
-                window.location.href = '/'
             })
         })
     </script>

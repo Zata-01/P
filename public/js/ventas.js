@@ -196,9 +196,20 @@ function completarVenta() {
   alert("¡Venta completada! Ticket: " + numeroTicket)
 }
 
-function cerrarSesion() {
-  alert("Sesión cerrada")
-  window.location.reload()
+function cerrarSesion(event) {
+    event.preventDefault() // Previene que el <a> siga el href por defecto
+    
+    fetch('/logout', {
+        method: 'POST'
+    })
+    .then(res => {
+        if (res.ok) {
+            // Ahora la sesión ha sido limpiada en el servidor Y la cookie en el cliente.
+            window.location.href = '/' // Redirigir al inicio
+        } else {
+            alert('Fallo al cerrar sesión en el servidor.')
+        }
+    })
 }
 
 window.agregarAlCarrito = agregarAlCarrito
