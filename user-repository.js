@@ -6,14 +6,14 @@ export class UserRepository {
   static async create ({ username, password, rol }) { 
     Validation.username(username)
     Validation.password(password)
-    if (!rol) throw new Error('Role is required.')
+    if (!rol) throw new Error('Es necesario un rol')
 
     const client = await pool.connect()
 
     try {
       const checkUser = await client.query('SELECT id FROM usuarios WHERE usuario = $1', [username])
       if (checkUser.rows.length > 0) {
-        throw new Error('Username already exists.')
+        throw new Error('El usuario ya existe')
       }
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
@@ -41,10 +41,10 @@ export class UserRepository {
       )
 
       const user = result.rows[0]
-      if (!user) throw new Error('Username does not exist.')
+      if (!user) throw new Error('El usuario no existe')
 
       const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) throw new Error('Password is invalid.')
+      if (!isValid) throw new Error('Contrasena invalida')
 
       const { password: _, id, rol, ...publicUser } = user
       return { _id: id, rol, ...publicUser } 
@@ -57,13 +57,13 @@ export class UserRepository {
 class Validation {
   static username (username) {
     // Validaciones del username
-    if (typeof username !== 'string') throw new Error('Username must be a string.')
-    if (username.length < 3) throw new Error('Username must be at least 3 characters long.')
+    if (typeof username !== 'string') throw new Error('El usuario debe ser un string')
+    if (username.length < 3) throw new Error('El usuario debe de tener al menos 3 caracteres')
   }
 
   static password (password) {
     // Validaciones del password
-    if (typeof password !== 'string') throw new Error('Password must be a string.')
-    if (password.length < 6) throw new Error('Password must be at least 6 characters long')
+    if (typeof password !== 'string') throw new Error('La contrasena debe ser un string')
+    if (password.length < 6) throw new Error('La contrasena debe de tener al menos 6 caracteres')
   }
 }

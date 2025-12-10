@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import path from "path";
 import { fileURLToPath } from "url";
+import notifier from 'node-notifier';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,6 +122,12 @@ app.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Error en login:', error)
     res.status(401).send(error.message)
+
+    notifier.notify({
+      title: 'Error en login',
+      message: error.message,
+      sound: true // Opcional
+    });
   }
 })
 
@@ -128,7 +135,7 @@ app.post('/register', async (req, res) => {
   const { username, password, rol } = req.body 
   
   if (rol !== 'admin' && rol !== 'usuario') {
-      return res.status(400).send('Invalid role specified.')
+      return res.status(400).send('Rol invalido')
   }
 
   try {
@@ -137,6 +144,11 @@ app.post('/register', async (req, res) => {
   } catch (error) {
     res.status(400).send(error.message)
     console.error('Error en registro:', error)
+    notifier.notify({
+      title: 'Error en registro',
+      message: error.message,
+      sound: true // Opcional
+    });
   }
 })
 
@@ -145,7 +157,7 @@ app.post('/logout', (req, res) => {
         httpOnly: true, // Debe coincidir con la configuración
         sameSite: 'strict', // Debe coincidir con la configuración
         secure: process.env.NODE_ENV === 'production' // También debe coincidir
-    }).json({ message: 'Logout successful' })
+    }).json({ message: 'Logout successful'})
 })
 
 app.listen(PORT, () => {
