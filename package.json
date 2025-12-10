@@ -4,13 +4,33 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "dev": "node --watch app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ernesto \"H4xthan\" Ramos",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "db-local": "^3.1.0",
+    "ejs": "^3.1.10",
+    "express": "5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zata-01/P.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zata-01/P/issues"
+  },
+  "homepage": "https://github.com/Zata-01/P#readme",
+  "description": "",
+  "devDependencies": {
+    "standard": "17.1.2"
+  },
+  "eslintConfig": {
+    "extends": "standard"
   }
 }
