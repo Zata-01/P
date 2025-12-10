@@ -11,9 +11,16 @@ import { PORT, SECRET_JWT_KEY } from './config/config.js';
 import { UserRepository } from './user-repository.js';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
+
 const app = express();
+app.use(express.static("public"))
 app.use(express.json());
 app.use(cookieParser())
 app.use((req, res, next) => {
@@ -41,15 +48,50 @@ app.use('/api', devolucionesRoutes);
 app.use('/api', carritoRoutes);
 app.use('/api', reportesRoutes);
 
-app.set('view engine', 'ejs')
-
-
-
+app.set("views", path.join(__dirname, "public"));
+app.set("view engine", "ejs");
 
 app.get('/', (req, res) => {
   const { user } = req.session
-  res.render('index', user)
+  res.render('index.ejs', user)
 })
+
+app.get('/dashboard', (req, res) => {
+  const { user } = req.session
+  if (!user) return res.status(403).send('Access not authorized')
+  res.render('dashboard.ejs', user)
+})
+
+app.get('/productos', (req, res) => {
+  const { user } = req.session
+  res.render('productos.ejs', user)
+})
+
+app.get('/compras', (req, res) => {
+  const { user } = req.session
+  res.render('compras.ejs', user)
+})
+
+app.get('/ventas', (req, res) => {
+  const { user } = req.session
+  res.render('ventas.ejs', user)
+})
+
+app.get('/devoluciones', (req, res) => {
+  const { user } = req.session
+  res.render('devoluciones.ejs', user)
+})
+
+app.get('/usuarios', (req, res) => {
+  const { user } = req.session
+  res.render('usuarios.ejs', user)
+})
+
+app.get('/reportes', (req, res) => {
+  const { user } = req.session
+  res.render('reportes.ejs', user)
+})
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body
@@ -82,12 +124,6 @@ app.post('/register', async (req, res) => {
 })
 app.post('/logout', (req, res) => {
   res.clearCookie('access_token').json({ message: 'Logout successful' })
-})
-
-app.get('/protected', (req, res) => {
-  const { user } = req.session
-  if (!user) return res.status(403).send('Access not authorized')
-  res.render('protected', user)
 })
 
 app.listen(PORT, () => {

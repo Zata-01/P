@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto de Venta -SEIKO EXPRESS</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SEIKO EXPRESS</h2>
+                <p id="userInfo">Cargando...</p>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="dashboard" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a></li>
+                    <li class="nav-item"><a href="productos" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Productos</a></li>
+                    <li class="nav-item"><a href="ventas" class="nav-link active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Ventas</a></li>
+                    <li class="nav-item admin-only"><a href="compras" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>Compras</a></li>
+                    <li class="nav-item"><a href="devoluciones" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Devoluciones</a></li>
+                    <li class="nav-item admin-only"><a href="reportes" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Reportes</a></li>
+                    <li class="nav-item admin-only"><a href="usuarios" class="nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Usuarios</a></li>
+                    <li class="nav-item"><a href="/" class="nav-link" onclick="cerrarSesion()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Cerrar Sesión</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Punto de Venta</h1>
+                <p>Registra ventas y genera tickets</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 400px; gap: 1.5rem;">
+
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Buscar Producto</h3>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="barcodeSearch" placeholder="Escanear código de barras o buscar..." autofocus>
+                        </div>
+                        
+                        <div id="productResults"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Carrito de Compra</h3>
+                        </div>
+                        
+                        <div id="cartItems" style="min-height: 200px; margin-bottom: 1rem;">
+                            <p style="text-align: center; color: var(--color-muted); padding: 2rem;">
+                                Carrito vacío
+                            </p>
+                        </div>
+                        
+                        <div style="border-top: 2px solid var(--color-border); padding-top: 1rem; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">$0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700;">
+                                <span>Total:</span>
+                                <span id="total">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="paymentMethod">Método de Pago</label>
+                            <select id="paymentMethod">
+                                <option value="efectivo">Efectivo</option>
+                                <option value="tarjeta">Tarjeta</option>
+                                <option value="transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="completarVenta()" style="width: 100%; margin-bottom: 0.5rem;">
+                            Completar Venta
+                        </button>
+                        <button class="btn btn-secondary" onclick="limpiarCarrito()" style="width: 100%;">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="print-ticket" id="printTicket" style="display: none;">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">TICKET DE VENTA</h2>
+            <p id="ticketNumber" style="margin: 0.5rem 0;">No: T-001</p>
+            <p id="ticketDate" style="margin: 0; font-size: 0.875rem;"></p>
+        </div>
+        
+        <div style="border-top: 2px dashed #000; border-bottom: 2px dashed #000; padding: 0.5rem 0; margin: 1rem 0;">
+            <div id="ticketItems"></div>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Subtotal:</span>
+                <span id="ticketSubtotal"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.125rem;">
+                <span>TOTAL:</span>
+                <span id="ticketTotal"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem;">
+                <span>Pago:</span>
+                <span id="ticketPayment"></span>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.75rem;">
+            <p style="margin: 0;">¡Gracias por su compra!</p>
+            <p style="margin: 0.5rem 0 0 0;">Sistema POS</p>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="ventas.js"></script>
+</body>
+</html>

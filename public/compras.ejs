@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compras - SEIKO EXPRESS</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>SEIKO EXPRESS</h2>
+                <p id="userInfo">Cargando...</p>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="productos" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                            Productos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="ventas" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Ventas
+                        </a>
+                    </li>
+                    <li class="nav-item admin-only">
+                        <a href="compras" class="nav-link active">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            Compras
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="devoluciones" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                            </svg>
+                            Devoluciones
+                        </a>
+                    </li>
+                    <li class="nav-item admin-only">
+                        <a href="reportes" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item admin-only">
+                        <a href="usuarios" class="nav-link">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/" class="nav-link" onclick="cerrarSesion()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Compras</h1>
+                <p>Registra las compras realizadas a proveedores</p>
+            </div>
+            
+            <div class="card">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="text" id="buscarProducto" placeholder="Buscar producto por código o nombre..." class="form-group input">
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-primary" onclick="abrirModalRegistrarCompra()">+ Nueva Compra</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Compra</th>
+                                <th>Proveedor</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Total</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comprasTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Cargando compras...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal Registrar Compra -->
+    <div id="modalCompra" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Nueva Compra</h3>
+                <button class="modal-close" onclick="cerrarModalCompra()">&times;</button>
+            </div>
+            <form id="formCompra" onsubmit="registrarCompra(event)">
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <input type="text" id="proveedor" required>
+                </div>
+                <div class="form-group">
+                    <label>Producto</label>
+                    <select id="productoCompra" required>
+                        <option value="">Seleccione un producto</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad</label>
+                    <input type="number" id="cantidad" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio Unitario de Compra</label>
+                    <input type="number" id="precioUnitario" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Total: <span id="totalCompra">$0.00</span></label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalCompra()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Compra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="compras.js"></script>
+</body>
+</html>
