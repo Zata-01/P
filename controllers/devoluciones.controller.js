@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import { pool } from "../config/db.js";
 
 //obtener todas las devoluciones
 export const getDevoluciones = async (req, res) => {

@@ -6,7 +6,7 @@ import {
   getExistenciasActuales,
   getVentasPorUsuario,
   getTotalVendido
-} from "../controllers/reportesController.js";
+} from "../controllers/reportes.controller.js";
 
 const router = express.Router();
 

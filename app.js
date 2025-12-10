@@ -13,38 +13,8 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 
 dotenv.config();
-
 const app = express();
-
 app.use(express.json());
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || "secret_dev",
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
-app.get("/", (req, res) => {
-  res.json({ message: "Backend funcionando" });
-});
-
-app.use('/api', comprasRoutes);
-app.use('/api', productosRoutes);
-app.use('/api', ventasRoutes);
-app.use('/api', devolucionesRoutes);
-app.use('/api', carritoRoutes);
-app.use('/api', reportesRoutes);
-
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
-
-app.set('view engine', 'ejs')
-app.use(express.json())
 app.use(cookieParser())
 app.use((req, res, next) => {
   const token = req.cookies.access_token
@@ -56,6 +26,25 @@ app.use((req, res, next) => {
 
   next()
 })
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "secret_dev",
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+
+app.use('/api', comprasRoutes);
+app.use('/api', productosRoutes);
+app.use('/api', ventasRoutes);
+app.use('/api', devolucionesRoutes);
+app.use('/api', carritoRoutes);
+app.use('/api', reportesRoutes);
+
+app.set('view engine', 'ejs')
+
+
+
 
 app.get('/', (req, res) => {
   const { user } = req.session

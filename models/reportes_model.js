@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import { pool } from "../config/db.js";
 
 // VENTAS por rango de fechas
 export const ventasPorFecha = async (inicio, fin) => {
