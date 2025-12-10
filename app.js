@@ -3,10 +3,11 @@ import { PORT } from './config/config.js'
 import { UserRepository } from './user-repository.js'
 
 const app = express()
+app.set('view engine', 'ejs')
 app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.send('Hello friend')
+  res.render('index')
 })
 
 app.post('/login', async (req, res) => {
@@ -32,7 +33,9 @@ app.post('/register', async (req, res) => {
 })
 app.post('/logout', (req, res) => {})
 
-app.post('/protected', (req, res) => {})
+app.get('/protected', (req, res) => {
+  res.render('protected')
+})
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
