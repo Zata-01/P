@@ -5,6 +5,12 @@ import { SALT_ROUNDS } from './config/config.js'
 
 const { Schema } = new DBLocal({ path: './db' })
 
+const Session = Schema('Session', {
+  _id: { type: String, required: true },
+  user: { type: String, required: true },
+  expires: { type: Date, required: true }
+})
+
 const User = Schema('User', {
   _id: { type: String, required: true },
   username: { type: String, required: true },
