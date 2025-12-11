@@ -3,9 +3,9 @@ import {getVentas, getVentaById, createVenta, deleteVenta} from "../controllers/
 
 const router = Router();
 router.get("/ventas", getVentas);
-router.get("/ventas/:id", getVentaById );//Obtiene la venta por ID
-router.post("/ventas/", createVenta)
-router.delete("/ventas/:id", deleteVenta ) //Elimina ventas por ID
+router.get("/ventas/:id", getVentaById );
+router.post("/ventas/", createVenta);
+router.delete("/ventas/:id", deleteVenta); 
 
 
 export default router;

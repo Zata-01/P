@@ -97,6 +97,39 @@ function cerrarSesion(event) {
     })
 }
 
+async function cargarDashboard() {
+    try {
+        // Ventas Hoy
+        const hoy = new Date().toISOString().split('T')[0];
+        const resVentas = await fetch(`/api/reportes/ventas?inicio=${hoy}&fin=${hoy}`);
+        const ventas = await resVentas.json();
+        
+        let totalVentas = 0;
+        ventas.forEach(v => totalVentas += parseFloat(v.total));
+        document.getElementById("ventasHoy").innerText = `$${totalVentas.toFixed(2)}`;
+        
+        document.getElementById("productosVendidos").innerText = ventas.length; // Transacciones
+
+        // Cargar Ventas Recientes en tabla
+        const tbody = document.getElementById("recentSalesBody");
+        tbody.innerHTML = "";
+        ventas.slice(0, 5).forEach(v => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>V-${v.id}</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>$${parseFloat(v.total).toFixed(2)}</td>
+                    <td>${new Date(v.fecha).toLocaleTimeString()}</td>
+                </tr>
+            `;
+        });
+
+    } catch (e) { console.error(e); }
+}
+
+document.addEventListener("DOMContentLoaded", cargarDashboard);
+
 window.cerrarSesion = cerrarSesion
 
 // Inicializar dashboard

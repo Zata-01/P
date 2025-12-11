@@ -1,8 +1,5 @@
 import { pool } from "../config/db.js";
 
-//
-// GET /productos   (búsqueda, paginación, miniatura)
-//
 export const getProductos = async (req, res) => {
   try {
     const q = (req.query.q || "").trim();
@@ -62,16 +59,11 @@ export const getProductos = async (req, res) => {
   }
 };
 
-
-//
-// GET /productos/:id
-//
 export const getProductoById = async (req, res) => {
   try {
     const { id } = req.params;
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
 
-    // Incluye codigo_barras, stock_minimo y usa existencias.stock
     const sql = `
       SELECT 
         i.id,
@@ -91,7 +83,6 @@ export const getProductoById = async (req, res) => {
 
     const producto = rows[0];
 
-    // obtener todas las imágenes
     const imgs = await pool.query(
       "SELECT id, imagen FROM imagenes_item WHERE item_id = $1 ORDER BY id DESC",
       [id]
@@ -110,10 +101,6 @@ export const getProductoById = async (req, res) => {
   }
 };
 
-
-//
-// POST /productos
-//
 export const addProduct = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -129,7 +116,6 @@ export const addProduct = async (req, res) => {
 
     await client.query("BEGIN");
 
-    // Check for unique codigo_barras
     const checkBarcodeSql = "SELECT id FROM items WHERE codigo_barras = $1";
     const checkBarcode = await client.query(checkBarcodeSql, [codigo_barras]);
     if (checkBarcode.rows.length > 0) {
@@ -137,7 +123,6 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ message: "El Código de Barras ya existe" });
     }
 
-    // Insertar en items (incluye codigo_barras, stock_minimo)
     const insertItemSql = `
       INSERT INTO items (nombre, descripcion, precio, estado, codigo_barras)
       VALUES ($1, $2, $3, $4, $5)
@@ -153,7 +138,6 @@ export const addProduct = async (req, res) => {
 
     const itemId = r.rows[0].id;
 
-    // Insertar imagen si viene
     if (imagenBuffer) {
       await client.query(
         "INSERT INTO imagenes_item (item_id, imagen) VALUES ($1, $2)",
@@ -161,7 +145,6 @@ export const addProduct = async (req, res) => {
       );
     }
 
-    // Crear existencias = 0 (usa columna 'stock')
     await client.query(
       "INSERT INTO existencias (item_id, stock) VALUES ($1, 0)",
       [itemId]
@@ -182,17 +165,13 @@ export const addProduct = async (req, res) => {
   }
 };
 
-
-//
-// PUT /productos/:id
-//
 export const updateProduct = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
 
-    const { nombre, descripcion, precio, estado, imagenBase64, codigo_barras, stock_minimo } = req.body;
+    const { nombre, descripcion, precio, estado, imagenBase64, codigo_barras} = req.body;
 
     const check = await client.query("SELECT id FROM items WHERE id = $1", [id]);
     if (check.rows.length === 0) {
@@ -217,10 +196,6 @@ export const updateProduct = async (req, res) => {
       );
     }
 
-    await client.query("COMMIT");
-    return res.json({ message: "Producto actualizado" });
-
-    // Check for unique codigo_barras if provided and changed
     if (codigo_barras !== undefined) {
         const checkBarcodeSql = "SELECT id FROM items WHERE codigo_barras = $1 AND id != $2";
         const checkBarcode = await client.query(checkBarcodeSql, [codigo_barras, id]);
@@ -230,7 +205,6 @@ export const updateProduct = async (req, res) => {
         }
     }
 
-    // actualizar campos del producto
     const fields = [];
     const values = [];
     let idx = 1;
@@ -248,7 +222,6 @@ export const updateProduct = async (req, res) => {
       await client.query(sql, values);
     }
 
-    // insertar nueva imagen (opcional)
     if (imagenBuffer) {
       await client.query(
         "INSERT INTO imagenes_item (item_id, imagen) VALUES ($1, $2)",
@@ -268,16 +241,11 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-
-//
-// DELETE /productos/:id
-//
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
 
-    // Cambia el estado a 'agotado' para "eliminarlo" lógicamente
     const sql = `UPDATE items SET estado = 'agotado' WHERE id = $1`; 
     const r = await pool.query(sql, [id]);
 

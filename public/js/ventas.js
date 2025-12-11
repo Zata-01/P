@@ -1,222 +1,241 @@
-const verificarAutenticacion = () => {
-  return { nombre: "Ricardo Herrera", rol: "admin" }
-}
+let carrito = [];
 
-const usuarioActual = verificarAutenticacion()
-document.getElementById("userInfo").textContent = `${usuarioActual.nombre} (${usuarioActual.rol})`
+// Elementos del DOM
+const inputSearch = document.getElementById("barcodeSearch");
+const resultsContainer = document.getElementById("productResults");
+const cartContainer = document.getElementById("cartItems");
+const btnCompletar = document.querySelector("button[onclick='completarVenta()']");
 
-if (usuarioActual.rol !== "admin") {
-  document.querySelectorAll(".admin-only").forEach((el) => (el.style.display = "none"))
-}
-
-const productos = [
-  { id: 1, codigoBarras: "7501234567890", nombre: "Laptop HP Pavilion", precio: 12500, stock: 15 },
-  { id: 2, codigoBarras: "7501234567891", nombre: "Mouse Logitech", precio: 150, stock: 5 },
-  { id: 3, codigoBarras: "7501234567892", nombre: "Teclado Mecánico", precio: 1400, stock: 20 },
-  { id: 4, codigoBarras: "7501234567893", nombre: 'Monitor Samsung 24"', precio: 5600, stock: 12 },
-  { id: 5, codigoBarras: "7501234567894", nombre: "Webcam HD", precio: 600, stock: 25 },
-]
-
-let carrito = []
-
-document.getElementById("barcodeSearch").addEventListener("input", (e) => {
-  const busqueda = e.target.value.toLowerCase()
-
-  if (busqueda.length < 2) {
-    document.getElementById("productResults").innerHTML = ""
-    return
-  }
-
-  const resultados = productos.filter(
-    (p) => p.nombre.toLowerCase().includes(busqueda) || p.codigoBarras.includes(busqueda),
-  )
-
-  const divResultados = document.getElementById("productResults")
-  divResultados.innerHTML = ""
-
-  resultados.forEach((producto) => {
-    const div = document.createElement("div")
-    div.style.cssText =
-      "padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: 0.5rem; cursor: pointer;"
-    div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 600;">${producto.nombre}</div>
-                    <div style="font-size: 0.875rem; color: var(--color-muted);">
-                        ${producto.codigoBarras} | Stock: ${producto.stock}
-                    </div>
-                </div>
-                <div style="font-weight: 700; color: var(--color-primary);">
-                    $${producto.precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                </div>
-            </div>
-        `
-    div.onclick = () => agregarAlCarrito(producto)
-    divResultados.appendChild(div)
-  })
-})
-
-function agregarAlCarrito(producto) {
-  const existente = carrito.find((item) => item.id === producto.id)
-
-  if (existente) {
-    if (existente.cantidad >= producto.stock) {
-      alert("No hay suficiente stock disponible")
-      return
-    }
-    existente.cantidad++
-  } else {
-    carrito.push({ ...producto, cantidad: 1 })
-  }
-
-  actualizarCarrito()
-  document.getElementById("barcodeSearch").value = ""
-  document.getElementById("productResults").innerHTML = ""
-}
-
-function actualizarCarrito() {
-  const divCarrito = document.getElementById("cartItems")
-
-  if (carrito.length === 0) {
-    divCarrito.innerHTML = '<p style="text-align: center; color: var(--color-muted); padding: 2rem;">Carrito vacío</p>'
-    document.getElementById("subtotal").textContent = "$0.00"
-    document.getElementById("total").textContent = "$0.00"
-    return
-  }
-
-  divCarrito.innerHTML = ""
-  let subtotal = 0
-
-  carrito.forEach((item) => {
-    const totalItem = item.precio * item.cantidad
-    subtotal += totalItem
-
-    const div = document.createElement("div")
-    div.style.cssText =
-      "padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: 0.5rem;"
-    div.innerHTML = `
-            <div style="font-weight: 600; margin-bottom: 0.5rem;">${item.nombre}</div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button onclick="actualizarCantidad(${item.id}, -1)" class="btn btn-small btn-secondary">-</button>
-                    <span>${item.cantidad}</span>
-                    <button onclick="actualizarCantidad(${item.id}, 1)" class="btn btn-small btn-secondary">+</button>
-                    <button onclick="removerDelCarrito(${item.id})" class="btn btn-small btn-danger">×</button>
-                </div>
-                <div style="font-weight: 700;">
-                    $${totalItem.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                </div>
-            </div>
-        `
-    divCarrito.appendChild(div)
-  })
-
-  document.getElementById("subtotal").textContent = "$" + subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })
-  document.getElementById("total").textContent = "$" + subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })
-}
-
-function actualizarCantidad(id, cambio) {
-  const item = carrito.find((i) => i.id === id)
-  if (!item) return
-
-  const nuevaCantidad = item.cantidad + cambio
-
-  if (nuevaCantidad <= 0) {
-    removerDelCarrito(id)
-    return
-  }
-
-  const producto = productos.find((p) => p.id === id)
-  if (nuevaCantidad > producto.stock) {
-    alert("No hay suficiente stock disponible")
-    return
-  }
-
-  item.cantidad = nuevaCantidad
-  actualizarCarrito()
-}
-
-function removerDelCarrito(id) {
-  carrito = carrito.filter((item) => item.id !== id)
-  actualizarCarrito()
-}
-
-function limpiarCarrito() {
-  if (carrito.length > 0 && !confirm("¿Deseas cancelar esta venta?")) return
-  carrito = []
-  actualizarCarrito()
-}
-
-function completarVenta() {
-  if (carrito.length === 0) {
-    alert("El carrito está vacío")
-    return
-  }
-
-  const metodoPago = document.getElementById("paymentMethod").value
-  const numeroTicket = "T-" + Date.now().toString().slice(-6)
-  const ahora = new Date()
-
-  document.getElementById("ticketNumber").textContent = "No: " + numeroTicket
-  document.getElementById("ticketDate").textContent = ahora.toLocaleString("es-MX")
-
-  const itemsTicket = document.getElementById("ticketItems")
-  itemsTicket.innerHTML = ""
-  let subtotal = 0
-
-  carrito.forEach((item) => {
-    const totalItem = item.precio * item.cantidad
-    subtotal += totalItem
-
-    const div = document.createElement("div")
-    div.style.cssText = "display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;"
-    div.innerHTML = `
-            <div>
-                <div>${item.nombre}</div>
-                <div style="color: #666;">${item.cantidad} x $${item.precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
-            </div>
-            <div>$${totalItem.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
-        `
-    itemsTicket.appendChild(div)
-  })
-
-  document.getElementById("ticketSubtotal").textContent =
-    "$" + subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })
-  document.getElementById("ticketTotal").textContent =
-    "$" + subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })
-  document.getElementById("ticketPayment").textContent = metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1)
-
-  document.getElementById("printTicket").style.display = "block"
-  window.print()
-  document.getElementById("printTicket").style.display = "none"
-
-  carrito = []
-  actualizarCarrito()
-
-  alert("¡Venta completada! Ticket: " + numeroTicket)
-}
-
-function cerrarSesion(event) {
-    event.preventDefault() // Previene que el <a> siga el href por defecto
+// 1. Buscador de Productos
+inputSearch.addEventListener("input", async (e) => {
+    const term = e.target.value.trim();
     
-    fetch('/logout', {
-        method: 'POST'
-    })
-    .then(res => {
-        if (res.ok) {
-            // Ahora la sesión ha sido limpiada en el servidor Y la cookie en el cliente.
-            window.location.href = '/' // Redirigir al inicio
-        } else {
-            alert('Fallo al cerrar sesión en el servidor.')
-        }
-    })
+    if (term.length < 2) {
+        resultsContainer.innerHTML = "";
+        return;
+    }
+
+    try {
+        resultsContainer.innerHTML = '<div style="padding:10px; color:#666;">Buscando...</div>';
+        
+        const res = await fetch(`/api/productos?q=${encodeURIComponent(term)}&limit=5`);
+        if (!res.ok) throw new Error("Error API");
+        
+        const data = await res.json();
+        renderResultados(data.items || []);
+        
+    } catch (error) {
+        console.error(error);
+        resultsContainer.innerHTML = '<div style="padding:10px; color:red;">Error al buscar</div>';
+    }
+});
+
+// 2. Mostrar Resultados de Búsqueda
+function renderResultados(productos) {
+    resultsContainer.innerHTML = "";
+
+    if (productos.length === 0) {
+        resultsContainer.innerHTML = '<div style="padding:10px; color:#666;">No encontrado</div>';
+        return;
+    }
+
+    productos.forEach(p => {
+        const div = document.createElement("div");
+        div.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; background: white;";
+        
+        // Colorear stock: Verde si hay, Rojo si no
+        const stockColor = p.existencia > 0 ? 'green' : 'red';
+        const precio = parseFloat(p.precio).toFixed(2);
+
+        div.innerHTML = `
+            <div style="font-weight:bold;">${p.nombre}</div>
+            <div style="font-size:0.9em; color:#555;">
+                Cód: ${p.codigo_barras || 'S/N'} | 
+                <strong>$${precio}</strong> | 
+                <span style="color:${stockColor}">Stock: ${p.existencia}</span>
+            </div>
+        `;
+
+        div.onclick = () => agregarAlCarrito(p);
+        
+        // Efecto hover
+        div.onmouseover = () => div.style.background = "#f9f9f9";
+        div.onmouseout = () => div.style.background = "white";
+        
+        resultsContainer.appendChild(div);
+    });
 }
 
-window.agregarAlCarrito = agregarAlCarrito
-window.actualizarCantidad = actualizarCantidad
-window.removerDelCarrito = removerDelCarrito
-window.limpiarCarrito = limpiarCarrito
-window.completarVenta = completarVenta
-window.cerrarSesion = cerrarSesion
+// 3. Agregar al Carrito (Con Validación de Stock)
+function agregarAlCarrito(producto) {
+    // Validar Stock
+    const stockActual = parseInt(producto.existencia) || 0;
+    
+    if (stockActual <= 0) {
+        alert(`❌ No puedes vender "${producto.nombre}".\nEl stock es 0. Registra una COMPRA primero.`);
+        return;
+    }
 
-actualizarCarrito()
+    const itemEnCarrito = carrito.find(i => i.id === producto.id);
+    
+    if (itemEnCarrito) {
+        if (itemEnCarrito.cantidad + 1 > stockActual) {
+            alert(`⚠️ Stock insuficiente. Solo hay ${stockActual} unidades disponibles.`);
+            return;
+        }
+        itemEnCarrito.cantidad++;
+    } else {
+        carrito.push({
+            id: producto.id,
+            nombre: producto.nombre,
+            precio: parseFloat(producto.precio), // Asegurar número
+            cantidad: 1,
+            maxStock: stockActual
+        });
+    }
+
+    actualizarCarritoDOM();
+    
+    // Limpiar buscador
+    inputSearch.value = "";
+    resultsContainer.innerHTML = "";
+    inputSearch.focus();
+}
+
+// 4. Renderizar Carrito
+function actualizarCarritoDOM() {
+    cartContainer.innerHTML = "";
+    let subtotal = 0;
+
+    if (carrito.length === 0) {
+        cartContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#999;">El carrito está vacío</div>';
+        actualizarTotales(0);
+        return;
+    }
+
+    carrito.forEach((item, index) => {
+        const totalLinea = item.cantidad * item.precio;
+        subtotal += totalLinea;
+
+        const row = document.createElement("div");
+        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;";
+        
+        row.innerHTML = `
+            <div style="flex:1">
+                <div style="font-weight:500;">${item.nombre}</div>
+                <div style="font-size:0.85em; color:#666;">
+                    $${item.precio.toFixed(2)} x 
+                    <input type="number" min="1" max="${item.maxStock}" value="${item.cantidad}" 
+                        onchange="cambiarCantidad(${index}, this.value)" 
+                        style="width:50px; padding:2px; text-align:center;">
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-weight:bold;">$${totalLinea.toFixed(2)}</div>
+                <button onclick="removerItem(${index})" class="btn btn-danger btn-small" style="margin-top:5px; padding:2px 8px;">Eliminar</button>
+            </div>
+        `;
+        cartContainer.appendChild(row);
+    });
+
+    actualizarTotales(subtotal);
+}
+
+function actualizarTotales(subtotal) {
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+
+    document.getElementById("subtotal").innerText = `$${subtotal.toFixed(2)}`;
+    // Puedes mostrar el IVA en algún lado si tu HTML tiene el elemento, sino solo Total
+    document.getElementById("total").innerText = `$${total.toFixed(2)}`;
+}
+
+// 5. Funciones Auxiliares (Globales)
+window.removerItem = (index) => {
+    carrito.splice(index, 1);
+    actualizarCarritoDOM();
+};
+
+window.cambiarCantidad = (index, nuevaCant) => {
+    const cantidad = parseInt(nuevaCant);
+    const item = carrito[index];
+
+    if (cantidad < 1) {
+        item.cantidad = 1;
+        alert("La cantidad mínima es 1");
+    } else if (cantidad > item.maxStock) {
+        item.cantidad = item.maxStock;
+        alert(`Solo tienes ${item.maxStock} unidades en inventario.`);
+    } else {
+        item.cantidad = cantidad;
+    }
+    actualizarCarritoDOM();
+};
+
+window.limpiarCarrito = () => {
+    if (carrito.length > 0 && confirm("¿Vaciar carrito?")) {
+        carrito = [];
+        actualizarCarritoDOM();
+    }
+};
+
+window.completarVenta = async () => {
+    if (carrito.length === 0) return alert("El carrito está vacío");
+    
+    if (!confirm(`¿Confirmar venta por ${document.getElementById("total").innerText}?`)) return;
+
+    btnCompletar.disabled = true;
+    btnCompletar.textContent = "Procesando...";
+
+    try {
+        const res = await fetch('/api/ventas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productos: carrito })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || "Error al procesar venta");
+
+        // Imprimir Ticket
+        imprimirTicket(data.ticket);
+
+        // Resetear
+        carrito = [];
+        actualizarCarritoDOM();
+        alert("¡Venta Exitosa!");
+
+    } catch (error) {
+        console.error(error);
+        alert("Error: " + error.message);
+    } finally {
+        btnCompletar.disabled = false;
+        btnCompletar.textContent = "Completar Venta";
+    }
+};
+
+function imprimirTicket(ticket) {
+    const ticketArea = document.getElementById("printTicket");
+    
+    // Rellenar datos del ticket
+    document.getElementById("ticketNumber").innerText = ticket.folio;
+    document.getElementById("ticketDate").innerText = ticket.fecha;
+    
+    const itemsHTML = ticket.productos.map(p => `
+        <div style="display:flex; justify-content:space-between; font-family:monospace; font-size:12px; margin-bottom:4px;">
+            <span>${p.cantidad} x ${p.nombre.substring(0,15)}</span>
+            <span>$${(p.cantidad * p.precio).toFixed(2)}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById("ticketItems").innerHTML = itemsHTML;
+    document.getElementById("ticketSubtotal").innerText = `$${parseFloat(ticket.subtotal).toFixed(2)}`;
+    document.getElementById("ticketTotal").innerText = `$${parseFloat(ticket.total).toFixed(2)}`;
+
+    // Imprimir
+    ticketArea.style.display = "block";
+    window.print();
+    // Ocultar después de imprimir (pequeño delay para asegurar que el diálogo de impresión capture el contenido)
+    setTimeout(() => { ticketArea.style.display = "none"; }, 500);
+}

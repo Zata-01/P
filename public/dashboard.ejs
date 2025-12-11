@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SEIKO EXPRESS</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-secondary);
+            padding: 2rem;
+        }
+
+        .welcome-box {
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .welcome-box h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--color-primary);
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-box p {
+            font-size: 1.5rem;
+            color: var(--color-muted);
+            font-weight: 400;
+        }
+
+        .welcome-user {
+            color: var(--color-foreground);
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-box h1 { font-size: 2.5rem; }
+            .welcome-box p { font-size: 1.2rem; }
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard">
@@ -84,51 +128,14 @@
         </aside>
 
         <main class="main-content">
-            <div class="page-header">
-                <h1>Dashboard</h1>
-                <p>Resumen de actividades del negocio</p>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Ventas Hoy</div>
-                    <div class="stat-value" id="ventasHoy">$0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Productos Vendidos</div>
-                    <div class="stat-value" id="productosVendidos">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Productos en Stock</div>
-                    <div class="stat-value" id="productosStock">0</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Ventas Recientes</h3>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Ticket</th>
-                                <th>Producto</th>
-                                <th>Cantidad</th>
-                                <th>Total</th>
-                                <th>Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentSalesBody">
-                            <tr>
-                                <td colspan="5" style="text-align: center;">Cargando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="welcome-box">
+                <h1>Bienvenido a<br>SEIKO EXPRESS</h1>
+                <p>Hola, <span class="welcome-user">Usuario</span></p>
+                <p style="font-size: 1rem; margin-top: 1rem;">Selecciona una opción del menú para comenzar.</p>
             </div>
         </main>
     </div>
+    
     <script src="js/dashboard.js"></script>
 </body>
 </html>

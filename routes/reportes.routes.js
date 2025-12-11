@@ -1,28 +1,16 @@
-import express from "express";
-import {
-  getVentasPorFechas,
-  getComprasPorFechas,
-  getProductosMasVendidos,
-  getExistenciasActuales,
-  getVentasPorUsuario,
-  getTotalVendido
+import { Router } from "express";
+import { 
+    getVentasPorFechas, 
+    getComprasPorFechas, 
+    getInventarioReport, 
+    getDevolucionesReport 
 } from "../controllers/reportes.controller.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/ventas", getVentasPorFechas);
-
-router.get("/compras", getComprasPorFechas);
-
-
-router.get("/productos-mas-vendidos", getProductosMasVendidos);
-
-router.get("/existencias", getExistenciasActuales);
-
-
-router.get("/ventas/usuario/:usuario_id", getVentasPorUsuario);
-
-
-router.get("/total-vendido", getTotalVendido);
+router.get("/reportes/ventas", getVentasPorFechas);
+router.get("/reportes/compras", getComprasPorFechas);
+router.get("/reportes/inventario", getInventarioReport);
+router.get("/reportes/devoluciones", getDevolucionesReport);
 
 export default router;

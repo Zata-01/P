@@ -77,12 +77,12 @@ app.get('/dashboard', requireSession, preventCache, (req, res) => {
   res.render('dashboard.ejs', user)
 })
 
-app.get('/productos', requireSession, preventCache,(req, res) => {
+app.get('/productos', requireSession, requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('productos.ejs', user)
 })
 
-app.get('/compras', requireSession, preventCache,(req, res) => {
+app.get('/compras', requireSession, requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('compras.ejs', user)
 })
@@ -97,12 +97,12 @@ app.get('/devoluciones', requireSession, preventCache,(req, res) => {
   res.render('devoluciones.ejs', user)
 })
 
-app.get('/usuarios', requireAdmin, preventCache,(req, res) => {
+app.get('/usuarios', requireSession, requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('usuarios.ejs', user)
 })
 
-app.get('/reportes', requireAdmin, preventCache,(req, res) => {
+app.get('/reportes', requireSession, requireAdmin, preventCache,(req, res) => {
   const { user } = req.session
   res.render('reportes.ejs', user)
 })
@@ -156,9 +156,9 @@ app.post('/register', async (req, res) => {
 
 app.post('/logout', (req, res) => {
     res.clearCookie('access_token', {
-        httpOnly: true, // Debe coincidir con la configuración
-        sameSite: 'strict', // Debe coincidir con la configuración
-        secure: process.env.NODE_ENV === 'production' // También debe coincidir
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production'
     }).json({ message: 'Logout successful'})
 })
 

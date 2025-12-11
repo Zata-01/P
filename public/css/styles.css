@@ -64,7 +64,6 @@ body {
   font-size: 0.875rem;
 }
 
-/* Forms */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -95,7 +94,6 @@ body {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Buttons */
 .btn {
   display: inline-block;
   padding: 0.625rem 1.25rem;
@@ -142,7 +140,6 @@ body {
   font-size: 0.75rem;
 }
 
-/* Dashboard Layout */
 .dashboard {
   display: flex;
   min-height: 100vh;
@@ -226,7 +223,6 @@ body {
   font-size: 0.875rem;
 }
 
-/* Cards */
 .card {
   background: var(--color-card);
   border-radius: var(--radius);
@@ -270,7 +266,6 @@ body {
   color: var(--color-foreground);
 }
 
-/* Tables */
 .table-container {
   overflow-x: auto;
 }
@@ -301,7 +296,6 @@ tr:hover {
   background-color: var(--color-secondary);
 }
 
-/* Toolbar */
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -322,7 +316,6 @@ tr:hover {
   gap: 0.75rem;
 }
 
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -377,7 +370,6 @@ tr:hover {
   margin-top: 1.5rem;
 }
 
-/* Alerts */
 .alert {
   padding: 1rem;
   border-radius: var(--radius);
@@ -405,7 +397,6 @@ tr:hover {
   border-left: 4px solid var(--color-danger);
 }
 
-/* Badge */
 .badge {
   display: inline-block;
   padding: 0.25rem 0.625rem;
@@ -429,7 +420,6 @@ tr:hover {
   color: #991b1b;
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -456,7 +446,6 @@ tr:hover {
   border-color: var(--color-primary);
 }
 
-/* Print Styles */
 @media print {
   body * {
     visibility: hidden;
@@ -477,7 +466,25 @@ tr:hover {
   }
 }
 
-/* Responsive */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printTicket, #printTicket * {
+        visibility: visible;
+    }
+    #printTicket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 5px;
+        color: black;
+        background: white;
+    }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
@@ -524,4 +531,141 @@ tr:hover {
   height: 50px; /* Alto fijo */
   object-fit: cover; /* Asegura que la imagen cubra el área sin distorsionar su aspecto */
   border-radius: var(--radius);
+}
+
+/* --- ESTILOS DE REPORTE E IMPRESIÓN --- */
+
+/* Contenedor del reporte imprimible (oculto en pantalla normal) */
+#printableReport {
+    display: none;
+}
+
+@media print {
+    /* Ocultar todo lo que no sea el reporte */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* Mostrar solo el área de reporte */
+    #printableReport, #printableReport * {
+        visibility: visible;
+    }
+
+    /* Posicionar el reporte ocupando toda la hoja */
+    #printableReport {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px; /* Margen interno seguro */
+        background: white;
+        color: black;
+        font-family: 'Times New Roman', Times, serif; /* Tipografía formal */
+    }
+
+    /* Configuración de página */
+    @page {
+        size: letter; /* O A4 */
+        margin: 1.5cm;
+    }
+
+    /* Cabecera del Reporte */
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .report-logo {
+        width: 120px; /* ~32mm */
+        height: auto;
+    }
+
+    .report-info {
+        text-align: right;
+    }
+
+    .report-title {
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    /* Tabla de Reporte */
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-bottom: 20px;
+    }
+
+    .report-table th {
+        background-color: #ddd !important; /* Resaltar encabezado */
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: center;
+        font-weight: bold;
+        -webkit-print-color-adjust: exact; /* Forzar impresión de color */
+    }
+
+    .report-table td {
+        border: 1px solid #000;
+        padding: 4px;
+    }
+
+    /* Filas Zebra */
+    .report-table tr:nth-child(even) {
+        background-color: #f2f2f2 !important;
+        -webkit-print-color-adjust: exact;
+    }
+
+    /* Alineaciones específicas */
+    .col-text { text-align: left; }
+    .col-num { text-align: right; }
+    .col-center { text-align: center; }
+
+    /* Totales */
+    .report-totals {
+        margin-top: 10px;
+        text-align: right;
+        font-weight: bold;
+        border-top: 1px solid #000;
+        padding-top: 5px;
+    }
+
+    /* Pie de página */
+    .report-footer {
+        margin-top: 50px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: white;
+    }
+
+    .footer-section {
+        flex: 1;
+    }
+
+    .signature-line {
+        border-top: 1px solid #000;
+        width: 200px;
+        margin-top: 40px;
+        text-align: center;
+        padding-top: 5px;
+    }
+
+    /* Numeración de página (Truco CSS) */
+    .page-number:after {
+        content: "Página " counter(page);
+    }
 }

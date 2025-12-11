@@ -1,186 +1,83 @@
 import { pool } from "../config/db.js";
 
-//obtener todas las devoluciones
-export const getDevoluciones = async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM devoluciones ORDER BY id DESC");
-        return res.json(result.rows);
-
-    } catch (error) {
-        console.error("Error al obtener devoluciones:", error);
-        return res.status(500).json({ message: "Error interno del servidor" });
-    }
-};
-
-// Obtener devoluciones por ID
-export const getDevolucionById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const devol = await pool.query("SELECT * FROM devoluciones WHERE id = $1", [id]);
-        if (devol.rows.length === 0) {
-            return res.status(404).json({ message: "Devolución no encontrada" });
-        }
-
-        const detalles = await pool.query(
-            `SELECT dd.*, p.nombre AS nombre_producto
-             FROM devoluciones_det dd
-             JOIN productos p ON p.id = dd.item_id
-             WHERE dd.devolucion_id = $1`,
-            [id]
-        );
-
-        return res.json({
-            devolucion: devol.rows[0],
-            detalles: detalles.rows
-        });
-
-    } catch (error) {
-        console.error("Error al obtener devolución:", error);
-        return res.status(500).json({ message: "Error interno del servidor" });
-    }
-};
-
-// crear devolución
 export const createDevolucion = async (req, res) => {
     const client = await pool.connect();
-
     try {
-        const { venta_id, usuario_id, productos } = req.body;
-
-        if (!venta_id || !usuario_id || !productos || productos.length === 0) {
-            return res.status(400).json({ message: "Datos incompletos" });
-        }
-
-        // Validar que la venta exista
-        const venta = await client.query(
-            "SELECT * FROM ventas WHERE id = $1",
-            [venta_id]
-        );
-
-        if (venta.rows.length === 0) {
-            return res.status(404).json({ message: "La venta no existe" });
-        }
+        const { venta_id, items, motivo } = req.body; 
 
         await client.query("BEGIN");
 
-        // Calcular total devolución
-        let total = 0;
-        productos.forEach(p => total += p.cantidad * p.precio);
-
-        // Insertar cabecera
-        const devol = await client.query(
-            `INSERT INTO devoluciones (fecha, venta_id, usuario_id, total)
-             VALUES (NOW(), $1, $2, $3)
-             RETURNING id`,
-            [venta_id, usuario_id, total]
-        );
-
-        const devolucion_id = devol.rows[0].id;
-
-        // Procesar cada producto devuelto
-        for (const item of productos) {
-
-            // Verificar que no se devuelva más de lo vendido
-            const vendido = await client.query(
-                `SELECT cantidad 
-                 FROM ventas_det 
-                 WHERE venta_id = $1 AND item_id = $2`,
+        for (const item of items) {
+            const ventaDet = await client.query(
+                "SELECT cantidad FROM ventas_det WHERE venta_id = $1 AND item_id = $2",
                 [venta_id, item.item_id]
             );
+            
+            if (ventaDet.rows.length === 0) throw new Error(`Producto ID ${item.item_id} no pertenece a esta venta`);
+            const vendido = ventaDet.rows[0].cantidad;
 
-            if (vendido.rows.length === 0) {
-                throw new Error(`El producto ID ${item.item_id} no pertenece a esta venta.`);
+            const prevDev = await client.query(
+                "SELECT SUM(cantidad) as total FROM devoluciones_venta WHERE venta_id = $1 AND item_id = $2",
+                [venta_id, item.item_id]
+            );
+            const devueltoPrev = parseInt(prevDev.rows[0].total || 0);
+
+            if ((devueltoPrev + parseInt(item.cantidad)) > vendido) {
+                throw new Error(`No se puede devolver más de lo vendido. Vendido: ${vendido}, Previo: ${devueltoPrev}`);
             }
 
-            if (item.cantidad > vendido.rows[0].cantidad) {
-                throw new Error(`No se pueden devolver más unidades de las que se vendieron.`);
-            }
-
-            // Insertar detalles
             await client.query(
-                `INSERT INTO devoluciones_det (devolucion_id, item_id, cantidad, precio)
-                 VALUES ($1, $2, $3, $4)`,
-                [devolucion_id, item.item_id, item.cantidad, item.precio]
+                "INSERT INTO devoluciones_venta (venta_id, item_id, cantidad, motivo, fecha) VALUES ($1, $2, $3, $4, NOW())",
+                [venta_id, item.item_id, item.cantidad, motivo]
             );
 
-            // Regresar existencias al inventario
             await client.query(
-                `UPDATE existencias 
-                 SET cantidad = cantidad + $1
-                 WHERE item_id = $2`,
+                "UPDATE existencias SET stock = stock + $1 WHERE item_id = $2",
                 [item.cantidad, item.item_id]
             );
         }
 
         await client.query("COMMIT");
-
-        return res.json({
-            devolucion_id,
-            venta_id,
-            usuario_id,
-            fecha: new Date(),
-            productos,
-            total
-        });
+        res.json({ message: "Devolución procesada exitosamente" });
 
     } catch (error) {
         await client.query("ROLLBACK");
-        console.error("Error al crear devolución:", error);
-        return res.status(500).json({ 
-            message: "Error al crear devolución", 
-            error: error.message 
-        });
-
+        res.status(400).json({ message: error.message });
     } finally {
         client.release();
     }
 };
-
-// snular devolución
-export const deleteDevolucion = async (req, res) => {
-    const client = await pool.connect();
-
+export const getDevoluciones = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { q } = req.query;
+        
+        let sql = `
+            SELECT 
+                d.*, 
+                i.nombre as producto, 
+                v.id as folio_venta,
+                (d.cantidad * vd.precio_unidad) as monto_devuelto
+            FROM devoluciones_venta d
+            JOIN items i ON d.item_id = i.id
+            JOIN ventas v ON d.venta_id = v.id
+            JOIN ventas_det vd ON (d.venta_id = vd.venta_id AND d.item_id = vd.item_id)
+        `;
 
-        await client.query("BEGIN");
-
-        const detalles = await client.query(
-            "SELECT * FROM devoluciones_det WHERE devolucion_id = $1",
-            [id]
-        );
-
-        if (detalles.rows.length === 0) {
-            return res.status(404).json({ message: "Devolución no encontrada" });
+        const params = [];
+        if (q) {
+            sql += ` WHERE CAST(v.id AS TEXT) ILIKE $1 OR i.nombre ILIKE $1 OR d.motivo ILIKE $1`;
+            params.push(`%${q}%`);
         }
 
-        // revertir inventario
-        for (const item of detalles.rows) {
-            await client.query(
-                `UPDATE existencias
-                 SET cantidad = cantidad - $1
-                 WHERE item_id = $2`,
-                [item.cantidad, item.item_id]
-            );
-        }
+        sql += ` ORDER BY d.fecha DESC LIMIT 50`;
 
-        // Eliminar detalles
-        await client.query("DELETE FROM devoluciones_det WHERE devolucion_id = $1", [id]);
-
-        // Eliminar el registro principal de la devolución
-        await client.query("DELETE FROM devoluciones WHERE id = $1", [id]);
-
-        await client.query("COMMIT");
-
-        return res.json({ message: "Devolución anulada correctamente" });
-
-    } catch (error) {
-        await client.query("ROLLBACK");
-        console.error("Error al anular devolución:", error);
-        return res.status(500).json({ message: "Error al anular devolución" });
-
-    } finally {
-        client.release();
+        const r = await pool.query(sql, params);
+        res.json(r.rows);
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({message: e.message}); 
     }
 };
+
+export const getDevolucionById = async (req, res) => {};
+export const deleteDevolucion = async (req, res) => {};
